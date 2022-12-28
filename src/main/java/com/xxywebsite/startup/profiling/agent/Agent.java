@@ -55,7 +55,6 @@ public class Agent {
          * @throws Exception
          */
         public static void instrument(String packagePrefix, Instrumentation instrumentation) throws Exception {
-            // Prepare source somehow.
             String source = String.format("import com.xxywebsite.startup.profiling.agent.interceptor.AroundLogInterceptor;\n" +
                     "import com.xxywebsite.startup.profiling.agent.interceptor.TimingInterceptor;\n" +
                     "import startup.shade.net.bytebuddy.agent.builder.AgentBuilder;\n" +
@@ -81,8 +80,8 @@ public class Agent {
                     "import static startup.shade.net.bytebuddy.matcher.ElementMatchers.nameStartsWith;\n" +
                     "\n" +
                     "import static startup.shade.net.bytebuddy.matcher.ElementMatchers.*;\n" +
-                    "public class Test {" +
-                    "public static void fn(Instrumentation instrumentation) {" +
+                    "public class  StartupProfilingAgent {" +
+                    "public static void instrument(Instrumentation instrumentation) {" +
                     "        TypePool typePool = TypePool.Default.ofSystemLoader();" +
                     "        new AgentBuilder\n" +
                     "                .Default()\n" +
@@ -105,21 +104,20 @@ public class Agent {
                     "}" +
                     "}", packagePrefix);
 
-// Save source in .java file.
-            File root = new File("./test"); // On Windows running on C:\, this is C:\java.
-            File sourceFile = new File(root, "Test.java");
+            File root = new File("./temp");
+            File sourceFile = new File(root, "StartupProfilingAgent.java");
             sourceFile.getParentFile().mkdirs();
             Files.write(sourceFile.toPath(), source.getBytes(StandardCharsets.UTF_8));
 
-// Compile source file.
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             compiler.run(null, null, null, sourceFile.getPath());
 
-// Load and instantiate compiled class.
             URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{root.toURI().toURL()});
-            Class<?> cls = Class.forName("Test", true, classLoader); // Should print "hello".
+            Class<?> cls;
+            cls = Class.forName("StartupProfilingAgent", true, classLoader);
 
-            Method method = cls.getDeclaredMethod("fn", Instrumentation.class);
+
+            Method method = cls.getDeclaredMethod("instrument", Instrumentation.class);
             method.invoke(null, instrumentation);
         }
 

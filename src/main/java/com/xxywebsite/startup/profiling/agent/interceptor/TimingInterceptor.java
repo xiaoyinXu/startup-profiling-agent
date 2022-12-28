@@ -20,14 +20,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TimingInterceptor {
     public static Map<String, Long> map = new ConcurrentHashMap<>();
 
-    // 暂不使用
+    // 用于倒序打印。  暂未使用
     public static Map<String, Long> getResultMap() {
         TreeMap<String, Long> treeMap = new TreeMap<>(new Comparator<String>() {
             @Override
             public int compare(String method1, String method2) {
                 Long duration1 = map.get(method1);
                 Long duration2 = map.get(method2);
-                return duration1.compareTo(duration2) != 0 ? duration1.compareTo(duration2) : method1.compareTo(method2);
+                return duration1.compareTo(duration2) != 0 ? duration2.compareTo(duration1) : method1.compareTo(method2);
             }
         });
         treeMap.putAll(map);
