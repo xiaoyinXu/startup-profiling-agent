@@ -13,7 +13,7 @@
 
 命令如下：
 ```shell
-java -javaagent:{startup-profiling-agent}.jar=class=nameStartsWith(org.example)&method=any()  -jar {your-spring-boot-application}.jar`
+java -javaagent:'{startup-profiling-agent}.jar=class=nameStartsWith(org.example)&method=any()'  -jar {your-spring-boot-application}.jar`
 ```
 
 案例2：`org.example前缀并且被@Configuration注解类下的所有@Bean方法`
@@ -24,7 +24,7 @@ java -javaagent:{startup-profiling-agent}.jar=class=nameStartsWith(org.example)&
 
 命令如下：
 ```shell
-java -javaagent:{startup-profiling-agent}.jar=class=nameStartsWith(org.example).and(isAnnotatedWith(@org.springframework.context.annotation.Configuration))&method=isAnnotatedWith(@org.springframework.context.annotation.Bean)  -jar {your-spring-boot-application}.jar`
+java -javaagent:'{startup-profiling-agent}.jar=class=nameStartsWith(org.example).and(isAnnotatedWith(@org.springframework.context.annotation.Configuration))&method=isAnnotatedWith(@org.springframework.context.annotation.Bean)'  -jar {your-spring-boot-application}.jar`
 ```
 
 
