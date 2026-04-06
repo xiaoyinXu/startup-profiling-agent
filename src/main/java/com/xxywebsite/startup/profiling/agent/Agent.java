@@ -26,15 +26,26 @@ public class Agent {
      */
     public static void premain(String args, Instrumentation instrumentation) throws Exception {
         if (args == null || args.isEmpty()) {
-            System.err.println("请指定javaagent参数(profiling的包路径)，例如org.example");
+            System.err.println("错误: 未指定javaagent参数。");
+            System.err.println("用法: -javaagent:startup-profiling-agent.jar=class=<类选择表达式>&method=<方法选择表达式>");
+            System.err.println("示例: -javaagent:startup-profiling-agent.jar=class=nameStartsWith(org.example)&method=any()");
             System.exit(1);
         }
 
         Selector selector = null;
         try {
             selector = new Selector(args);
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("错误: 解析javaagent参数时发生异常: " + e);
+            System.exit(1);
+        }
+
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        if (compiler == null) {
+            System.err.println("错误: 未找到Java编译器，请使用JDK而非JRE运行应用。");
             System.exit(1);
         }
 

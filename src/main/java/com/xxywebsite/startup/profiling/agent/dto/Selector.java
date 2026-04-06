@@ -18,10 +18,27 @@ public class Selector {
 
     private String methodSelectorExpr;
 
+    private static final String USAGE =
+            "用法: -javaagent:startup-profiling-agent.jar=class=<类选择表达式>&method=<方法选择表达式>\n" +
+            "示例: -javaagent:startup-profiling-agent.jar=class=nameStartsWith(org.example)&method=any()\n" +
+            "示例: -javaagent:startup-profiling-agent.jar=class=nameStartsWith(org.example).and(isAnnotatedWith(@org.springframework.context.annotation.Configuration))&method=isAnnotatedWith(@org.springframework.context.annotation.Bean)";
+
     // class=nameStartsWith(com.jd).and(isAnnotatedWith(@org.springframework.context.annotation.Configuration))&method=isAnnotatedWith(@org.springframework.context.annotation.Bean)
     public Selector(String commandLineArg) {
-        if (commandLineArg == null || !commandLineArg.matches(ARG_PATTERN)) {
-            throw new RuntimeException("请输入正确的命令行参数,格式参照:\"class=...&method=...\"");
+        if (commandLineArg == null) {
+            throw new IllegalArgumentException("错误: 未指定javaagent参数。\n" + USAGE);
+        }
+        if (commandLineArg.isEmpty()) {
+            throw new IllegalArgumentException("错误: javaagent参数不能为空。\n" + USAGE);
+        }
+        if (!commandLineArg.startsWith("class=")) {
+            throw new IllegalArgumentException("错误: 参数必须以 'class=' 开头，收到的参数为: \"" + commandLineArg + "\"。\n" + USAGE);
+        }
+        if (!commandLineArg.matches(".*&method=.*")) {
+            throw new IllegalArgumentException("错误: 参数缺少 '&method=' 部分，收到的参数为: \"" + commandLineArg + "\"。\n" + USAGE);
+        }
+        if (!commandLineArg.matches(ARG_PATTERN)) {
+            throw new IllegalArgumentException("错误: 参数格式不正确，收到的参数为: \"" + commandLineArg + "\"。\n" + USAGE);
         }
         Pattern pattern = Pattern.compile(Selector.ARG_PATTERN);
         Matcher matcher = pattern.matcher(commandLineArg);
