@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 public class TimingInterceptor {
     private static final String LOG_FILE = "profiling.log";
 
+    public static volatile String threadMode = "main";
+
     public static Map<String, Long> map = new ConcurrentHashMap<>();
 
     static {
@@ -73,6 +75,10 @@ public class TimingInterceptor {
     @RuntimeType
     @SneakyThrows
     public static Object fn(@Origin Method method, @This(optional = true) Object t, @SuperCall Callable<?> callable) {
+        // thread=main 时只记录主线程上的方法耗时
+        if (!"all".equals(threadMode) && !"main".equals(Thread.currentThread().getName())) {
+            return callable.call();
+        }
         long startTs = System.currentTimeMillis();
         try {
             return callable.call();

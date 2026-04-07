@@ -1,6 +1,7 @@
 package com.xxywebsite.startup.profiling.agent;
 
 import com.xxywebsite.startup.profiling.agent.dto.Selector;
+import com.xxywebsite.startup.profiling.agent.interceptor.TimingInterceptor;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
@@ -27,7 +28,8 @@ public class Agent {
     public static void premain(String args, Instrumentation instrumentation) throws Exception {
         if (args == null || args.isEmpty()) {
             System.err.println("错误: 未指定javaagent参数。");
-            System.err.println("用法: -javaagent:startup-profiling-agent.jar=class=<类选择表达式>&method=<方法选择表达式>");
+            System.err.println("用法: -javaagent:startup-profiling-agent.jar=[class=<类选择表达式>&]method=<方法选择表达式>[&thread=main|all]");
+            System.err.println("示例: -javaagent:startup-profiling-agent.jar=method=any()");
             System.err.println("示例: -javaagent:startup-profiling-agent.jar=class=nameStartsWith(org.example)&method=any()");
             System.exit(1);
         }
@@ -48,6 +50,8 @@ public class Agent {
             System.err.println("错误: 未找到Java编译器，请使用JDK而非JRE运行应用。");
             System.exit(1);
         }
+
+        TimingInterceptor.threadMode = selector.getThreadMode();
 
         // 运行时编译 后续方便拓展
         Helper.instrument(selector.getClassSelectorExpr(), selector.getMethodSelectorExpr(), instrumentation);
@@ -116,11 +120,11 @@ public class Agent {
                     "        TypePool typePool = TypePool.Default.ofSystemLoader();" +
                     "        new AgentBuilder\n" +
                     "                .Default()\n" +
-                    "                .type(%s)\n" +
+                    "                .type((%s).and(not(isInterface())))\n" +
                     "                .transform((new AgentBuilder.Transformer() {\n" +
                     "                    @Override\n" +
                     "                    public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder, TypeDescription typeDescription, ClassLoader classLoader, JavaModule module, ProtectionDomain protectionDomain) {\n" +
-                    "                        return builder.method(%s).intercept(MethodDelegation.to(TimingInterceptor.class));\n" +
+                    "                        return builder.method((%s).and(not(nameContains(\"$\")))).intercept(MethodDelegation.to(TimingInterceptor.class));\n" +
                     "                    }\n" +
                     "                }))\n" +
                     "                .installOn(instrumentation);\n" +
