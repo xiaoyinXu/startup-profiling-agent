@@ -26,9 +26,12 @@ import java.util.concurrent.TimeUnit;
  * @since 2022/12/27
  **/
 public class TimingInterceptor {
+    private static final String LOG_FILE = "profiling.log";
+
     public static Map<String, Long> map = new ConcurrentHashMap<>();
 
     static {
+        // 使用守护线程，JVM 退出时无需显式关闭调度器
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
@@ -57,13 +60,13 @@ public class TimingInterceptor {
                 return cmp != 0 ? cmp : e1.getKey().compareTo(e2.getKey());
             }
         });
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("profiling.log", false))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE, false))) {
             for (Map.Entry<String, Long> entry : entries) {
                 writer.write(String.format("方法:%s, 耗时:%dms", entry.getKey(), entry.getValue()));
                 writer.newLine();
             }
         } catch (IOException e) {
-            System.err.println("startup-profiling-agent: 写入profiling.log失败: " + e.getMessage());
+            System.err.println("startup-profiling-agent: 写入" + LOG_FILE + "失败: " + e.getMessage());
         }
     }
 
